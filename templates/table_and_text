@@ -1,0 +1,32 @@
+.DELIMS stmt-block="<% %>" tag="{{ }}"
+<%
+ENV_VARIABLE="$(printf "%17s" "$ENV_VARIABLE")"
+name1="$(printf "%-13s" "$1")"
+name2="$(printf "%-13s" "$2")"
+
+echo -e "\e[H"
+date
+
+%>
+
+
++---------------+---------+-------------------+
+|               |         |                   |
++---------------+---------+-------------------+
+| {{ $name1  }} | ....... | {{$ENV_VARIABLE}} |
+| {{ $name2  }} | ....... | {{$ENV_VARIABLE}} |
++---------------+---------+-------------------+
+
+
+<%
+
+echo $counter
+
+readarray -t lines <<<"$MULTI_LINE"
+
+for l in "${lines[@]}" ; do
+	echo -e "\r\e[K$l"
+done
+
+# vim: set ft=bash
+%>

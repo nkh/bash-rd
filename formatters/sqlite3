@@ -1,0 +1,15 @@
+#!/bin/bash
+
+[[ "$sql_db" ]] && [[ "$rd_line" =~ ^sql:(.*) ]] && 
+	{
+	(( ${sql_clear:-1} )) && echo -ne "\e[H\e[J"
+	
+	query="${BASH_REMATCH[1]}" ;
+	sqlite3 "$sql_db" "$sql_mode" "$query"
+	} ||
+	{
+	(( sql_ignore_non_sql )) || echo "$rd_line"
+	}
+
+# vim: set ft=bash
+

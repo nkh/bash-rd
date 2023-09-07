@@ -1,0 +1,28 @@
+
+name1="$(printf "%8s" "$x")"
+name2="$(printf "%8s" "$y")"
+footer="Genrated by bash-rd on $(date)"
+
+echo web_table: generating page
+
+cat > $rd_web_page << EOP
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+
+<html>
+	<body>
+		<pre>
++---+---------+
+| k |  value  |
++---+---------+
+| x |$name1 |
+| y |$name2 |
++-------------+
+$footer
+		</pre>
+	</body>
+</html>
+EOP
+
+# vim: set ft=bash:
+

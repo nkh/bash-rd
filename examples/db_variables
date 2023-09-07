@@ -1,0 +1,33 @@
+#!/bin/bash
+
+rddb_setup() 
+{ 
+# setup variable in KV store (they are passed to the formatter)
+echo "sql_db=$1"
+echo "sql_clear=$2"
+echo "sql_mode=.mode box"
+
+echo 'sql:create table variables (key text PRIMARY KEY, value int);'
+}
+
+rddb_set() { echo "sql:insert into variables (key, value) values ('$1', '$2') on conflict do update set value = '$2'" ; }
+
+rddb_show() { [[ "$1" ]] && echo "$1" ; echo 'sql:select * from variables;' ; }
+
+# -----------------------------------------------------------------------------
+
+echo c:
+
+rddb_setup my_db 0
+
+rddb_set 'a' 0
+rddb_show
+
+for v in $(seq 100) ; do
+	rddb_set 'a' $v
+done
+
+rddb_show
+
+# vim: set ft=bash:
+

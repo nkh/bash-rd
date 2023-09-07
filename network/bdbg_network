@@ -1,0 +1,31 @@
+#!/bin/bash
+
+rm -rf fifo
+mkfifo fifo
+exec 3<>fifo # keep fifo open
+
+cat fifo | ./ bdg_format
+rm fifo
+
+# 	proc 3>watcher1 4>watcher2
+# 		echo "template_placeholder: value\n..."
+# access via netcat / ssh
+# socat TCP-LISTEN:1234 - | ./display_formatted 
+
+# socat -d TCP-CONNECT:127.0.0.1:1234 PIPE:the_socket
+# echo ':quit' >the_socket 
+
+
+
+# socat \
+#     -v -d -d \
+#     TCP-LISTEN:1234,crlf,reuseaddr,fork \
+#     SYSTEM:"
+#         echo HTTP/1.1 200 OK; 
+#         echo Content-Type\: text/plain; 
+#         echo; 
+#         echo \"Server: \$SOCAT_SOCKADDR:\$SOCAT_SOCKPORT\";
+#         echo \"Client: \$SOCAT_PEERADDR:\$SOCAT_PEERPORT\";
+#     "
+#socat -v -v -d -d TCP-LISTEN:8080,reuseaddr,fork exec:"cat http.response",pipes
+

@@ -1,0 +1,22 @@
+name1="$(printf "%8s" "$x")"
+name2="$(printf "%8s" "$y")"
+
+echo -ne "\e[H\e[J"
+date
+
+# v="HOME USER"
+# paste <(echo $v | tr ' ' '\n') <(printenv $v)
+
+cat <<<"
++---+---------+
+| k |  value  |
++---+---------+
+| x |$name1 |
+| y |$name2 |
++-------------+"
+
+# echo $rd_counter
+
+# vim: set ft=bash:
+
+

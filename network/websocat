@@ -1,0 +1,25 @@
+[[ "$1" == -s ]] &&
+	{
+	# there's no need to  
+	websocat -s 127.0.0.1:8000 < \
+		<(
+			while true ; do 
+				((counter++))
+				echo $counter
+				inotifywait -e close $PWD ; done
+			) 
+		> >(
+			while read received ; do
+				echo server: $received
+			done
+			)
+	}
+
+[[ "$1" == -c ]] &&
+	{
+	websocat ws://127.0.0.1:8000
+	}
+
+
+# vim: set ft=bash:
+

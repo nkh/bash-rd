@@ -1,0 +1,28 @@
+#!/bin/bash
+
+read -r -d '' json <<EOJ
+{
+    "columnHeaders": [
+        {
+            "name": "ga:pagePath",
+            "columnType": "DIMENSION",
+            "dataType": "STRING"
+        },
+        {
+            "name": "ga:pageviews",
+            "columnType": "METRIC",
+            "dataType": "INTEGER"
+        }
+    ],
+    "rows": [
+        [ "/" , 8 ],
+        [ "/a", 4 ],
+        [ "/b", 3 ],
+        [ "/c", 2 ],
+        [ "/d", 1 ]
+    ]
+}
+EOJ
+
+printf 'json=%s\n' "$(<<<"$json" base64 -w 0)"
+

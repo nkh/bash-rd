@@ -1,0 +1,27 @@
+#!/bin/bash
+
+declare -A log4j_levels=( ['DEBUG']=0 ['INFO']=1 ['NOTICE']=2 ['WARN']=3 ['ERROR']=4 ['CRIT']=5 ['ALERT']=6 ['EMERG']=7)
+log4j_colors=(            '35'        '2;34'     '2;32'       '33'       '31'        '4;31' '5;31'  '101;93')
+
+logger()
+{
+[[ "$rd_line" =~ ^(.*):(.*) ]] && level_name="${BASH_REMATCH[1]}" && [[ "$log4j_levels[$level_name]" ]] &&
+	{
+	level=${log4j_levels[$level_name]}
+	(( level >= log4j_level )) && { echo -ne "\e[${log4j_colors[$level]}m$level_name:\e[m" ; echo "${BASH_REMATCH[2]}" ; }
+	}
+}
+
+(( rd_counter )) && logger ||
+	{
+	log4j_sink=2
+
+	log4j_sink()  { log4j_sink="$1" ; }
+	log4j_level() { log4j_level=${log4j_levels[$1]} ; echo "log4j_level=$log4j_level" >$log4j_sink ; }
+	log4j_send()    { echo "$*" >&$log4j_sink ; }
+
+	for l in "${!log4j_levels[@]}" ; do eval "log_${l,,}() { log4j_send '$l:' \"\$@\" ; }" ; done
+	}
+
+# vim: set ft=bash:
+

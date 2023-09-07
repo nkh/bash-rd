@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# setup variable in KV store (they are passed to the formatter)
+echo "sql_db=my_db"
+echo "sql_mode=.mode box"
+
+# create table, it might already exist
+echo "sql:create table my_table (key text PRIMARY KEY, value int, t DATETIME DEFAULT CURRENT_TIMESTAMP);"
+
+# sql command contains '=', tell rd to not parse KV by prepending '!:', we could do that for all lines
+echo "!:sql:insert into my_table (key, value) values ('a', 'new') on conflict do update set value = 'new'"
+echo 'sql:select * from my_table;'
+
+# do stuff
+echo ...  ; sleep 2
+
+echo "!:sql:insert into my_table (key, value) values ('a', '1') on conflict do update set value = '1'"
+echo 'sql:select * from my_table;'
+
+# vim: set ft=bash:
+

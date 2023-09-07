@@ -1,0 +1,5 @@
+#!/bin/bash
+
+(( $# )) || { echo -e "serve  : rd --local | --fifo | --id | --port | --web [formatter]\nconnect: rd -c | -n | -N" >&2 ; exit 1 ; }
+
+tmux split-window -d -h "rd $*"

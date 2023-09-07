@@ -1,0 +1,38 @@
+#!/bin/env perl
+
+use strict ;
+use warnings ;
+
+use Text::Table::Tiny 1.02 qw/ generate_table / ;
+ 
+my $variables = $ENV{rd_line} // '' ;
+my @rows = ( [split /\s+/, $ENV{rd_ptt_header} // 'key value' ] ) ;
+my @variables ;
+
+if( $variables =~ s/^ptt:// )
+	{
+	print "\e[H\e[J" ;
+	
+	for (split ";" , $variables) 
+		{
+		my ($variable, @comment) = split /\s+/, $_ ;
+		
+		push @rows, [$variable//'?', $ENV{$variable}//'?', "@comment"] ;
+		}
+	
+	# different types of table
+	# check https://metacpan.org/pod/Text::Table::Tiny
+
+	# print generate_table(rows => \@rows, header_row => 1), "\n\n" ;
+	# print generate_table(rows => \@rows, header_row => 1, top_and_tail => 1), "\n\n" ;
+
+	binmode(STDOUT,':utf8');
+	print generate_table(rows => \@rows, header_row => 1, style => 'boxrule'), "\n" ;
+
+	# print generate_table(rows => \@rows, header_row => 1, style => 'boxrule', align => [qw/ l l r /] ), "\n" ;
+
+	# print generate_table(rows => \@rows, header_row => 1, style => 'norule'), "\n" ;
+	}
+
+# vim: set ft=perl
+
