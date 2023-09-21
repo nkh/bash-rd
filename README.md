@@ -635,7 +635,68 @@ rd -c 1234 "=:TEST=${RED}test${RESET}"
 ```
 ![PTT](https://github.com/nkh/bash-rd/blob/main/media/rd_ptt.png)
 
+# REAL LIFE EXAMPLES
 
+OK, it's nice to tools but if they collect dust in your numeric toolbox they are of no help.
+
+I'll add cases where I used rd in this section.
+
+## tdiff
+
+*tdiff* is an interactive program, I had a problem while adding a function, exactly the type of problems rd can help with.
+
+![TDIFF](https://github.com/nkh/bash-rd/blob/main/media/rd_tdiff.png)
+
+First understand what was going wrong.
+
+Yes it's easy to take a piece of bash code and run it in the shell (Bash you rock); but you need the data ... you already have.
+If the data was large I'd redirect it in file and use it but this case was simple enough.
+The possibility to use the interactive program to pick and chose which data is also a plus.
+
+What does the code do?
+
+```bash
+
+# glyphs is a cache of, well, glyphs
+# we create a cache because this function is called often and starting a subshell
+# to run sed would be time expensive in a loop
+
+# the first character, a glyph, is extracted from a string which can contain colors
+
+[[ "${glyphs[$2]}" ]] || glyph[$2]="$(<<<"${lines[$2]}" sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' )"
+```
+
+Some tooling later:
+
+```bash
+# show if the cache has the glyph for our line
+echo cache: "${glyphs[$2]}" >&3
+
+# show the line
+echo line: ${lines[$2]} >&3
+
+# show the line in more details
+echo line: $(<<<"${lines[$2]}" show_control_characters) >&3
+
+[[ "${glyphs[$2]}" ]] || glyph[$2]="$(<<<"${lines[$2]}" sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' )"
+
+glyph="${glyphs[$2]}"
+
+# show the glyph
+echo glyph: $glyph >&3
+```
+
+Two noteworthy remarks:
+- echo is redirected to fd 3, which is itself redirected to *rd* on the command line
+	- leave sdtderr for errors
+	- 80% of the developers don't really know what stdout and stderr are for, don't be one of them
+- inserting show_control_characters, or any extra tool, gives a lot of options
+
+What did I learn will writing the code above?
+- know your data, I forgot about colors in the string
+- know your data redux, I forgot that glyphs are not just one ASCII character
+- I started debugging without rd but it's very simple and fast to setup
+ 
 # DEPENDENCIES
 
 netcat
