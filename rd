@@ -22,7 +22,14 @@ while IFS= read -r rd_line ; do
 	[[ "$rd_line" == e:            ]] && { rd_do=0 ;                                                                          }
 	[[ "$rd_line" =~ ^=:           ]] && { parse "${rd_line:2}" ; rd_line= ;                                                  } 
 	
-	(( rd_counter++ )) ; (( rd_do || rd_echo )) && $rd_format | tee "${rd_relays[@]}" ; rd_do=0
+	(( rd_counter++ )) ; 
+	(( rd_do || rd_echo )) && 
+		{
+		(( ${#rd_relays[@]} )) &&
+			$rd_format | tee "${rd_relays[@]}" ||
+			$rd_format 
+		}
+	rd_do=0
 done <$1
 
 [[ "${rd_relay_pids[@]}" ]] && for p in "${rd_relay_pids[@]}" ; do kill -SIGHUP -$p ; done

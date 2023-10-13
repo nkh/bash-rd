@@ -458,6 +458,10 @@ Closing the server closes:
 - the client side proxy
 - the client side end point (SDTOUT in the code above)
 
+***Note:*** relaying has a noticeable impact on the server performance as it needs
+send every line to all relays in a separate process. Let me know if performance is
+a problem.
+
 ### LAST WORD OF CAUTION
 
 If you are not used to open application to internet traffic, or even your intranet, talk to someone knowledgeable or your IT department first.
