@@ -281,6 +281,17 @@ tree -C -d > >(rd -c id)
 rd -n 1234 "something to send"
 ```
 
+## Usage in perl
+
+```perl
+open my $fh, ">&=", 3 ; 
+$fh->autoflush(1) ;
+
+print $fh "c:\n" ; # clear
+print $fh DumpTree $data, ...
+
+```
+
 # FORMATTERS 
 
 A formatter is a program that formats the received data, it can be as complicated or simple as you want.
