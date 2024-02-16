@@ -1,27 +1,27 @@
 % rd(1) | General Commands Manual
 # NAME
 
-	rd - display data remotely, serves as KV store
+	rd - display data remotely, also acts as a KV store
 
 ![UI](https://github.com/nkh/bash-rd/blob/main/media/rd.gif)
 
 # SYNOPSIS
 
-	rd CONNECTION [FORMATTER]
+	rd CONNECTION_TYPE [FORMATTER]
 
 	rd --connect ID
 
 # DESCRIPTION
 
-Write data to a file descriptor and have it displayed in another terminal, on another computer, in a web page.
+Client-Server program to displays data in another terminal, on another computer, in a web page.
 
-***rd*** provides the transport layer and an ephemeral key-value store.
+The client sends data to the server.
 
-The Data is simply echoed by the server but you can provide custom formatters.
+The server simply echoed by the server but you can provide custom formatters.
 
 # SECURITY
 
-With *rd* on a port you may open a security hole, If you are not sure about what you're doing, don't use rd!
+With *rd* running on a port you may open a security hole, If you are not sure about what you're doing, don't use rd!
 
 Options *-l, -f, -i* do not open ports. Close servers when you're done.
 
@@ -41,7 +41,7 @@ The best is not accept data from anyone but you or processes you control (includ
 
 There are two possibilities, serve a web page or relay the server's output. Both are documented below.
 
-# CONNECTION
+# CONNECTION_TYPE
 
 ## Server
 
@@ -65,8 +65,6 @@ There are two possibilities, serve a web page or relay the server's output. Both
 
 ## Client
 
-*rd* connects a file descriptor to a server.
-
 | Type          | Command  | Argument     |
 | -----------   | -------- | --------     |
 | connect       | -c       | ID           |
@@ -79,9 +77,11 @@ There are two possibilities, serve a web page or relay the server's output. Both
 
 ## Dir local
 
-Simplest setup when you run both the server and client in the same directory, in different terminals.
+Simplest setup when you run both the server and client in the same directory but in different terminals.
 
-No formatter given, data is echoed by *rd*
+### No formatter 
+
+Data is echoed by *rd*
 
 ```
 $> rd -l
@@ -93,7 +93,9 @@ $> program 3>XXXXXX # you chose which file descriptor you use to send remote dat
 
 ```
 
-With a formatter, you decide how the data is used
+### With a formatter
+
+You decide how the data is used and displayed
 
 ```
 $> rd -l my_formatter
@@ -142,17 +144,18 @@ $> cat > >(rd -N host my_port)
 ### Web page
 
 ```
-$> rd -w port web_table XXX
+$> rd -w my_port web_table XXX
 rd: ID: XXX
 
-# generate a page
-$> rd -n XXX '=:x=1'
+# set variable x and generate a page via formatter 'web_table'
+$> rd -c XXX '=:x=1'
 
-$> firefox http:/localhost:$port
-$> curl localhost:$port 2>&- | cat 
+# get page
+$> firefox http:/localhost:my_port
+$> curl localhost:my_port 2>&- | cat 
 ```
 
-# PROTOCOL
+# CONTROL COMMANDS
 
 *rd* accepts some control commands.
 
@@ -241,20 +244,18 @@ $> rd -i server2
 $> script 3> >(rd -c server1) 4> >(rd -c server2)
 ```
 
-The script, or equivalent command in Perl, C, Go, Pyton, ... application
+The script, or equivalent command in Perl, C, Go, Python, ... application
 
 ```bash
-fd=3  # the file descriptor you chose to use to send data
-fd2=4 # send data to different servers
+server1_fd=3  # the file descriptor you chose to use to send data
+server2_fd=4 # send data to different servers
 
 # will run the formatter
-echo "the value of a" >&$fd
+echo "data send to server_1" >&$server1_fd
 
 # will run the formatter
-echo -e "the value of a;b:123;c:  has spaces before has:d:with \0 binary" >&$fd2
+echo -e "data send to server_2 with \0 binary" >&$server2_fd
 
-# will run the formatter
-echo "some random string" >&$fd
 ```
 
 ## Send identical data to multiple servers
@@ -278,7 +279,7 @@ ls --color | rd -c id
 
 tree -C -d > >(rd -c id)
 
-rd -n 1234 "something to send"
+rd -n 1234 "some data"
 ```
 
 ## Usage in perl
@@ -294,11 +295,11 @@ print $fh DumpTree $data, ...
 
 # FORMATTERS 
 
-A formatter is a program that formats the received data, it can be as complicated or simple as you want.
+A formatter is an external program that formats the received data by the server.
 
-Without a formatter the data is echoed.
+Without a formatter the data is simply echoed.
 
-Formatters get key/value stored in their environment.
+Formatters also get the stored key/value in their environment.
 
 *rd* variables of interest:
 - $rd_pid, the pid of the server
@@ -311,6 +312,7 @@ Things you can do:
 - parse variable for content and location to display `echo "key:/x,y/value"`
 - list variables newest set first
 - show data structures
+...
 
 ## SECURITY
 
@@ -329,6 +331,8 @@ I like *bash-tpl*, a templating engine that generates bash scripts.
 ## Generating a web page
 
 You can use any HTML generator you like in your formatter, the HTML must be put in *$rd_web_page*.
+
+### example HTML generator in Bash
 
 ```bash
 name1="$(printf "%8s" "$x")"
@@ -538,9 +542,8 @@ To get access to the function you source the file, the same file can be used as 
 rd -f examples/log4j
 ```
 
-Alert is there but the screenshot can't capture blinking text.
-
 ![LOG4J](https://github.com/nkh/bash-rd/blob/main/media/log4j.png)
+Alert is there but the screenshot can't capture blinking text.
 
 # DATABASE
 
