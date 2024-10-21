@@ -5,6 +5,33 @@
 
 ![UI](https://github.com/nkh/bash-rd/blob/main/media/rd.gif)
 
+```
+.------------.-----------.
+| Terminal 1 | Server    |
+|            |           |
+.------------.-----------.
+| Terminal 2 | Relay +   |
+|            | formatter |
+'------------'-----------'
+```
+
+The server echoes all data.
+
+The relay only displays what looks like a log entry.
+
+Multiple commands are run in Terminal 1 to send data to the serer.
+
+*cat* is used in terminal 2, giving use a "cheap" terminal.
+
+- terminal 1: sends text to server, server echoes it, relay does nothing (twice)
+- terminal 2: sends text to server, server echoes it, relay does nothing
+- terminal 2: sends a log entry, server echoes it, relay echoes it
+- terminal 1: change server formatter dynamically to a table which can show the value of variables x and y
+- terminal 1: set value of x in KV store, table is updated 
+- terminal 2: idem
+- terminal 2: set value of y
+- terminal 1: send 'quit' command to server, relay also shuts down
+
 # SYNOPSIS
 
 	rd CONNECTION_TYPE [FORMATTER]
@@ -13,27 +40,27 @@
 
 # DESCRIPTION
 
-Client-Server program to displays data in another terminal, on another computer, in a web page.
+*rd* is displays data in another terminal, on another computer, in a web page.
 
-The client sends data to the server.
+*rd* is the client, it sends data to a server.
 
-The server simply echoed by the server but you can provide custom formatters.
+*rd* is also the server, it echoes the data send by a client but you can provide custom formatters.
 
 # SECURITY
 
 With *rd* running on a port you may open a security hole, If you are not sure about what you're doing, don't use rd!
 
-Options *-l, -f, -i* do not open ports. Close servers when you're done.
+Options *-l, -f, -i* do not open ports.
 
 ## Remote input and output
 
-If you need to send data to the server or get output from the server, understand the consequences first.
+If you need to send data to  server or get output from a server, understand the consequences first.
 
 ### Data in
 
-The best is not accept data from anyone but you or processes you control (including controlling what input they take in).
+Best is to not accept data from anyone but you or processes you control (including controlling the input).
 
-- Have a watertight firewall
+- have a watertight firewall
 - open the port to your server only and close it when done
 - proxy the connection and filter the traffic, netcat, ncat, socat can help you
 
@@ -45,27 +72,25 @@ There are two possibilities, serve a web page or relay the server's output. Both
 
 ## Server
 
-*rd* starts a server, it will display where you can connect.
+Start *rd* as a server, it will display where you can connect.
 
 ### Server local
 
-| Type        | Command  | Argument |
+| Type        | Option   | Argument |
 | ----------- | -------- | -------- |
-| dir local   | -l       |          |
-| fifo        | -f       |          |
+| random fifo | -f       |          |
 | user ID     | -i       | ID       |
 
 ### Server networked
 
-| Type        | Command  | Argument              |
+| Type        | Option   | Argument              |
 | ----------- | -------- | --------------------- |
 | port        | -p       | port                  |
 | web server  | -w       | port, formatter[, id] |
 
-
 ## Client
 
-| Type          | Command  | Argument     |
+| Type          | Option   | Argument     |
 | -----------   | -------- | --------     |
 | connect       | -c       | ID           |
 | net connect   | -n       | port         |
@@ -75,21 +100,17 @@ There are two possibilities, serve a web page or relay the server's output. Both
 
 # Examples
 
-## Dir local
-
-Simplest setup when you run both the server and client in the same directory but in different terminals.
-
 ### No formatter 
 
 Data is echoed by *rd*
 
 ```
-$> rd -l
+terminal 1 $> rd -l
 rd: ID: XXXXXX
 
-$> program >XXXXXX
+terminal 2 $> program >XXXXXX
 
-$> program 3>XXXXXX # you chose which file descriptor you use to send remote data
+terminal 3 $> program 3>XXXXXX # you chose which file descriptor you use to send remote data
 
 ```
 
@@ -98,19 +119,19 @@ $> program 3>XXXXXX # you chose which file descriptor you use to send remote dat
 You decide how the data is used and displayed
 
 ```
-$> rd -l my_formatter
+terminal 1 $> rd -l my_formatter # my_formatter will be called by the server
 rd: ID: XXXXXX
 
-$> bash_script 3>XXXXXX
+terminal 2 $> bash_script 3>XXXXXX
 ```
 
-## FIFO
+## Random FIFO
 
 ```
-$> rd -f
-rd: ID: XXXXXX
+terminal 1 $> rd -f
+rd: ID: XXXXXX # XXXXXX is where the server can be reached
 
-$> cat > >(rd -c XXXXXX)
+terminal 2 $> cat > >(rd -c XXXXXX)
 ```
 
 ## User ID
@@ -118,10 +139,10 @@ $> cat > >(rd -c XXXXXX)
 You can give an alphanumeric ID (or generate it, ex: https://github.com/fnichol/names).
 
 ```
-$> rd -i my_id 
+terminal 1 $> rd -i my_id 
 rd: ID: my_id
 
-$> cat | rd -c my_id
+terminal 2 $> cat | rd -c my_id
 ```
 
 ## Networked
@@ -133,22 +154,22 @@ With rd on a port you may open a security hole!
 ### Local port
 
 ```
-$> rd -p my_port
+terminal 1 $> rd -p my_port
 rd: port: my_port
 
-$> cat | rd -n my_port
+terminal 2 $> cat | rd -n my_port
 
-$> cat > >(rd -N host my_port)
+terminal 3 $> cat > >(rd -N host my_port)
 ```
 
 ### Web page
 
 ```
-$> rd -w my_port web_table XXX
+terminal 1 $> rd -w my_port web_table XXX
 rd: ID: XXX
 
 # set variable x and generate a page via formatter 'web_table'
-$> rd -c XXX '=:x=1'
+terminal 2 $> rd -c XXX '=:x=1'
 
 # get page
 $> firefox http:/localhost:my_port
@@ -163,7 +184,7 @@ $> curl localhost:my_port 2>&- | cat
 | ------ | ------------- | --------------------------------------------------------------- |
 | q:     | quit          | stop the server                                                 |
 | s:     | semaphore     | increment the server semaphore, needs to be 0 to quit           |
-| c:     | clear         | clear terminal                                                  |
+| c:     | clear         | clear server's terminal                                         |
 | e:     | when          | when to run the formatter. 0: always, 1: never, nothing: now    |
 | k:     | clean up data | use it if rd complains about existing data                      |
 | f:     | set formatter | dynamically set the formatter                                   |
@@ -177,48 +198,10 @@ $> curl localhost:my_port 2>&- | cat
 
 ## Key-Value store
 
-Store data on the server, they will be available to the formatters.
+*rd* stores your data, on the server, the data is available to the formatters.
 
 ```bash
-echo '=:key=value;other_key=value'
-```
-
-## Automatic call to formatter, the default
-
-```bash
-# file descriptor to match what set on the command line
-fd=3
-
-# runs formatter
-echo "=:a=the value of a" >&$fd
-
-# runs formatter
-echo "=:b=123" >&$fd # note that a and b are available to the formatter
-
-# runs formatter
-echo "some random text" >&$fd
-
-# shutdown server
-echo "q:" >&$fd
-```
-
-## Manual formatter call
-
-```bash
-fd=3
-
-# wait for command ':e' to run formatter 
-echo "e0:" >&$fd
-
-# will not run the formatter
-echo "=:a=the value of a" >&$fd
-echo "=:b=123" >&$fd
-
-# run formatter 
-echo "e:"
-
-# from this point always run the formatter 
-echo "e1:"
+echo '=:key=value;other_key=value' | rd -c ID
 ```
 
 # USAGE
@@ -227,30 +210,27 @@ echo "e1:"
 
 See video at top of README.md.
 
-By incrementing the quit semaphore, each client can quit and the server will quit when the last client quits.
+By using the semaphore command, each client can quit and the server will quit when the last client quits.
 
 ## Connect to multiple servers
 
-You can connect to  multiple server.
+You can start multiple server, each getting specific data or using a specific formatter.
 
 ```bash
-# terminal 1
-$> rd -i server1
+terminal 1 $> rd -i server1
 
-# terminal 2
-$> rd -i server2
+terminal 2 $> rd -i server2 my_formatter
 
-# terminal 3
-$> script 3> >(rd -c server1) 4> >(rd -c server2)
+terminal 3 $> my_script 3> >(rd -c server1) 4> >(rd -c server2)
 ```
 
-The script, or equivalent command in Perl, C, Go, Python, ... application
+*my_script*, or equivalent command in Perl, C, Go, ... 
 
 ```bash
-server1_fd=3  # the file descriptor you chose to use to send data
+server1_fd=3 # the file descriptor you chose to use to send data to on the above command line
 server2_fd=4 # send data to different servers
 
-# will run the formatter
+# will echo the data
 echo "data send to server_1" >&$server1_fd
 
 # will run the formatter
@@ -270,7 +250,7 @@ command | tee >(rd -c ID) > >(rd -n port)
 command | tee >(rd -c ID) | other_command
 ```
 
-## Usage in bash
+## Usage in Bash
 
 ```bash
 ls --color | rd -c id
@@ -282,7 +262,7 @@ tree -C -d > >(rd -c id)
 rd -n 1234 "some data"
 ```
 
-## Usage in perl
+## Usage in Perl
 
 ```perl
 open my $fh, ">&=", 3 ; 
@@ -295,9 +275,9 @@ print $fh DumpTree $data, ...
 
 # FORMATTERS 
 
-A formatter is an external program that formats the received data by the server.
+A formatter is an external program that formats the data received by the server.
 
-Without a formatter the data is simply echoed.
+Without a formatter the data is echoed.
 
 Formatters also get the stored key/value in their environment.
 
@@ -390,7 +370,7 @@ echo 'r:log_file:' | rd -c id
 
 # RELAYS
 
-Get a server's output to another terminal, relay will close when server closes.
+Get a server's output to another terminal, the relay will close when server closes.
 
 ```bash
 rd -r id
@@ -405,7 +385,7 @@ rd -r id log4j
 ## Relay rd running on a port
 
 ```bash
-rd -R port log4j
+rd -R port
 ```
 
 ## Relay rd running on another host
@@ -523,7 +503,7 @@ for l in "${!log4j_levels[@]}" ; do eval "log_${l,,}() { log4j_send '$l:' \"\$@\
 ## Formatter
 
 ```bash
-# is it a message 
+# is it a log entry
 [[ "$rd_line" =~ ^(.*):(.*) ]] && level_name="${BASH_REMATCH[1]}" && [[ "$log4j_levels[$level_name]" ]] &&
 	{
 	# what's its level ?
@@ -624,7 +604,7 @@ If you really must run in a loop:
 
 # TABLE FORMATTED KEY/VALUE
 
-You may not need persistent Key-value but a nice way to present some variables and maybe some comment.
+A table is a to present variables.
 
 The *ptt* formatter uses *Text::Table::Tiny* which can output tables in multiple formats.
 
@@ -632,10 +612,10 @@ You set Key-Values in *rd* and when you need a table you just send a command to 
 
 ```bash
 # start a server
-rd -i 1234 ptt
+rd -i 1234 ptt # use ptt as a formatter
 ```
 
-The *ptt* command look like this:
+A *ptt* command look like this:
 
 ```
 ptt:variable[ comment];variable; variable[ comment] ....
@@ -655,13 +635,9 @@ rd -c 1234 "=:TEST=${RED}test${RESET}"
 
 # REAL LIFE EXAMPLES
 
-OK, it's nice to tools but if they collect dust in your numeric toolbox they are of no help.
-
-I'll add cases where I used rd in this section.
-
 ## tdiff
 
-*tdiff* is an interactive program, I had a problem while adding a function, exactly the type of problems rd can help with.
+*tdiff* is an interactive program I wrote; I had a problem while adding a function, exactly the type of problems rd can help with.
 
 ![TDIFF](https://github.com/nkh/bash-rd/blob/main/media/rd_tdiff.png)
 
@@ -687,13 +663,9 @@ What does the code do?
 Some tooling later:
 
 ```bash
-# show if the cache has the glyph for our line
+ 
 echo cache: "${glyphs[$2]}" >&3
-
-# show the line
 echo line: ${lines[$2]} >&3
-
-# show the line in more details
 echo line: $(<<<"${lines[$2]}" show_control_characters) >&3
 
 [[ "${glyphs[$2]}" ]] || glyph[$2]="$(<<<"${lines[$2]}" sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' )"
@@ -707,14 +679,8 @@ echo glyph: $glyph >&3
 Two noteworthy remarks:
 - echo is redirected to fd 3, which is itself redirected to *rd* on the command line
 	- leave sdtderr for errors
-	- 80% of the developers don't really know what stdout and stderr are for, don't be one of them
-- inserting show_control_characters, or any extra tool, gives a lot of options
+- adding extra commands in the pipeline to rd let me display ANSI codes in the data
 
-What did I learn will writing the code above?
-- know your data, I forgot about colors in the string
-- know your data redux, I forgot that glyphs are not just one ASCII character
-- I started debugging without rd but it's very simple and fast to setup
- 
 # DEPENDENCIES
 
 netcat

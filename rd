@@ -45,7 +45,6 @@ server()    { socat TCP-LISTEN:$1,crlf,reuseaddr,fork SYSTEM:"$2" & : ; rd_serve
 [[ "$1" == -c ]] && { [[ -e "$rd_fs/$2" ]] && { { (($# > 2)) && echo "${@:3}" || cat ; } >"$rd_fs/$2" ; exit ; } || { echo "rd: no server @ '$2'" >&2 ; exit 1 ; } ; }
 [[ "$1" == -n ]] && { { (($# > 2)) && echo "${@:3}" || cat ; } | nc -N localhost "$2" ;                                                                 exit ; }
 [[ "$1" == -N ]] && { { (($# > 3)) && echo "${@:4}" || cat ; } | nc -N "$2" "$3" ;                                                                      exit ; }
-[[ "$1" == -l ]] && { RD_ID=$(mktemp -u .RDXXX) ;                                        ploop "local: $RD_ID" $RD_ID        $2 ;                       exit ; }
 [[ "$1" == -f ]] && { RD_ID=$(mktemp -u XXXXXX) ;                                        ploop "id: $RD_ID"    $rd_fs/$RD_ID $2 ;                       exit ; }
 [[ "$1" == -i ]] && {                                                                    ploop "id: $2"        $rd_fs/$2     $3 ;                       exit ; }
 [[ "$1" == -p ]] && { RD_ID=$(mktemp -u XXXXXX)       ; server $2 "cat >$rd_fs/$RD_ID" ; ploop "port: $2"      $rd_fs/$RD_ID $3 ; kill $rd_server_pid ; exit ; }
@@ -64,4 +63,4 @@ server()    { socat TCP-LISTEN:$1,crlf,reuseaddr,fork SYSTEM:"$2" & : ; rd_serve
 		}
 
 [[ "$1" == -h || "$1" == --help ]] && { man rd ; exit ; }
-echo -e "rd - display data remotely, serves as KV store\n\trd -i|-l|-f|-p|-w\t# start a server\n\trd -r|-R\t\t# relay\n\trd -c|-n|-N\t\t# connect to client" ; exit 1
+echo -e "rd - display data remotely, serves as KV store\n\trd -i|-f|-p|-w\t# start a server\n\trd -r|-R\t\t# relay\n\trd -c|-n|-N\t\t# connect to client" ; exit 1
