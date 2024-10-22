@@ -1,0 +1,6 @@
+#!/bin/bash
+
+(($#)) || { echo -e "rdc : Tell me where to connect." ; exit 1 ; }
+
+rd -c "$*"
+

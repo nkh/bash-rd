@@ -1,5 +1,7 @@
 #!/bin/bash
 
-(( $# )) || { echo -e "serve  : rd --local | --fifo | --id | --port | --web [formatter]\nconnect: rd -c | -n | -N" >&2 ; exit 1 ; }
+(( $# )) && tmux split-window -d -h "rd $*" \
+	 || { RD_ID=$(mktemp -u XXXXXX) ; tmux split-window -d -h "rd -i $RD_ID" ; echo -n "$RD_ID" | xsel -i -b ; } 
 
-tmux split-window -d -h "rd $*"
+#echo -e "rd : rd --fifo | --id | --port | --web [formatter]\nconnect: rd -c | -n | -N" >&2 ; exit 1 ; }
+

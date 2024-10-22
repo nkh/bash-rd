@@ -1,1 +1,7 @@
 - dynamic table for variables 
+	regex or list to limit what variables are displayed
+
+
+- log all the data to a file
+	not very secure
+		encrypt all entries

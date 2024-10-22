@@ -40,7 +40,7 @@ Multiple commands are run in Terminal 1 to send data to the serer.
 
 # DESCRIPTION
 
-*rd* is displays data in another terminal, on another computer, in a web page.
+*rd* displays data in another terminal, on another computer, in a web page.
 
 *rd* is the client, it sends data to a server.
 
@@ -50,7 +50,7 @@ Multiple commands are run in Terminal 1 to send data to the serer.
 
 With *rd* running on a port you may open a security hole, If you are not sure about what you're doing, don't use rd!
 
-Options *-l, -f, -i* do not open ports.
+Options *-f, -i* do not open ports.
 
 ## Remote input and output
 
@@ -105,12 +105,14 @@ Start *rd* as a server, it will display where you can connect.
 Data is echoed by *rd*
 
 ```
-terminal 1 $> rd -l
+terminal 1 $> rd -f
 rd: ID: XXXXXX
 
-terminal 2 $> program >XXXXXX
+terminal 2 $> program | rd -c XXXXXX
 
-terminal 3 $> program 3>XXXXXX # you chose which file descriptor you use to send remote data
+terminal 3 $> interactive_program >(rd -c XXXXXX)
+
+terminal 4 $> interactive_program 3>(rd -c XXXXXX) # chose which file descriptor you use to send data to rd
 
 ```
 
@@ -119,10 +121,10 @@ terminal 3 $> program 3>XXXXXX # you chose which file descriptor you use to send
 You decide how the data is used and displayed
 
 ```
-terminal 1 $> rd -l my_formatter # my_formatter will be called by the server
+terminal 1 $> rd -f my_formatter # my_formatter will be called by the server
 rd: ID: XXXXXX
 
-terminal 2 $> bash_script 3>XXXXXX
+terminal 2 $> bash_script | rd -c XXXXXX
 ```
 
 ## Random FIFO
@@ -464,6 +466,18 @@ If you are not used to open application to internet traffic, or even your intran
 Offering data as read only via a web service is simple and safe, still anyone with the address sees the data.
 
 The same amount of caution must be used when passing data to a formatter, filter the input, use chroot, running in pods, ...
+
+# UTILITIES
+
+## rdc
+
+A bash script that's equivalent to "rd -c"
+
+## trd
+
+* opens *rd* as a server in a tmux pane.
+
+You can pass the same arguments to *trd* as you can pass to *rd*, without argument *trd* will generated an ID and copy it to the clipboard.
 
 # CUSTOM FORMATTERS
 
