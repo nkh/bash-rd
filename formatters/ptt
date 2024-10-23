@@ -3,15 +3,63 @@
 use strict ;
 use warnings ;
 
+use File::Slurp;
 use Text::Table::Tiny 1.02 qw/ generate_table / ;
- 
+
+sub display_table
+{
+my ($rows) = @_ ;
+
+binmode(STDOUT,':utf8');
+print "rd_counter: $ENV{rd_counter}\n" ;
+print generate_table(rows => $rows, header_row => 1, style => 'boxrule'), "\n" ;
+}
+
+sub save_variable_set
+{
+my @variable_set = @_ ;
+
+write_file("$ENV{RD_PIPE}_ptt_set", map { $_ . "\n" } @variable_set) ;
+}
+
+sub get_variable_set
+{
+if(-e "$ENV{RD_PIPE}_ptt_set")
+	{
+	my @variable_set = read_file("$ENV{RD_PIPE}_ptt_set") ;
+	return @variable_set
+	}
+else
+	{
+	# print "ptt: no set to display\n" ;
+	return () ;
+	}
+}
+
+sub variable_set_to_rows
+{
+my (@variable_set) = @_ ;
+my @rows = ( [split /\s+/, $ENV{rd_ptt_header} // 'key value comment' ] ) ;
+
+for (@variable_set) 
+	{
+	my ($variable, @comment) = split /\s+/, $_ ;
+	
+	push @rows, [$variable//'?', $ENV{$variable}//'?', "@comment"] ;
+	}
+
+return \@rows ;
+}
+
+#---------------------------------------------------------------------------------------------------- 
+
 my $variables = $ENV{rd_line} // '' ;
-my @rows = ( [split /\s+/, $ENV{rd_ptt_header} // 'key value' ] ) ;
+my @rows = ( [split /\s+/, $ENV{rd_ptt_header} // 'key value comment' ] ) ;
 my @variables ;
 
 if( $variables =~ s/^ptt:// )
 	{
-	print "\e[H\e[J" ;
+	# print "\e[H\e[J" ; # clear screen
 	
 	for (split ";" , $variables) 
 		{
@@ -22,16 +70,40 @@ if( $variables =~ s/^ptt:// )
 	
 	# different types of table
 	# check https://metacpan.org/pod/Text::Table::Tiny
-
+	
 	# print generate_table(rows => \@rows, header_row => 1), "\n\n" ;
 	# print generate_table(rows => \@rows, header_row => 1, top_and_tail => 1), "\n\n" ;
-
-	binmode(STDOUT,':utf8');
-	print generate_table(rows => \@rows, header_row => 1, style => 'boxrule'), "\n" ;
-
+	
+	display_table(\@rows) ;
+	
 	# print generate_table(rows => \@rows, header_row => 1, style => 'boxrule', align => [qw/ l l r /] ), "\n" ;
-
 	# print generate_table(rows => \@rows, header_row => 1, style => 'norule'), "\n" ;
+	}
+elsif( $variables =~ s/^ptt_comment:// )
+	{
+	print "$variables\n" ;
+	}
+elsif( $variables =~ s/^ptt_reset:// )
+	{
+	unlink("$ENV{RD_PIPE}_ptt_set") ;
+	}
+elsif( $variables =~ s/^ptt_set:// )
+	{
+	my @variable_set ;
+	
+	for (split ";" , $variables) 
+		{
+		my ($variable, @comment) = split /\s+/, $_ ;
+		
+		push @variable_set, ("$variable"//'?') . " @comment" ;
+		}
+	
+	save_variable_set(@variable_set) ;
+	display_table(variable_set_to_rows(@variable_set)) ;
+	}
+else
+	{
+	display_table(variable_set_to_rows(get_variable_set())) if(-e "$ENV{RD_PIPE}_ptt_set") ;
 	}
 
 # vim: set ft=perl

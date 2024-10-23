@@ -3,8 +3,8 @@
 trap 'rm "$RD_PIPE" 2>&- ; trap SIGINT ; kill -2 $$' SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM
 set -a # become a KV store
 
-rd_fs=/tmp/$USER/rd ; mkdir -p $rd_fs ; rd_config="$HOME/.config/rd"
-RD_PIPE= ; rd_pid=$$ ; rd_echo=1 ; rd_semaphore=1 ; rd_counter=0 ; rd_relays=() ; rd_relay_pids=() ; rd_web_page="$rd_fs/web_page_$$" ;
+rd_fs="/tmp/$USER/rd" ; mkdir -p $rd_fs ; rd_config="$HOME/.config/rd"
+RD_ID= ; RD_PIPE= ; rd_pid=$$ ; rd_echo=1 ; rd_semaphore=1 ; rd_counter=0 ; rd_relays=() ; rd_relay_pids=() ; rd_web_page="$rd_fs/web_page_$$" ;
 
 loop()
 {

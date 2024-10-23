@@ -2,5 +2,5 @@
 
 (($#)) || { echo -e "rdc : Tell me where to connect." ; exit 1 ; }
 
-rd -c "$*"
+rlwrap -p'0;33' -S"rdc> " rd -c "$*"
 

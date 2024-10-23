@@ -5,7 +5,11 @@
 
 ![UI](https://github.com/nkh/bash-rd/blob/main/media/rd.gif)
 
+What's happening in the video above?
+
 ```
+Layout:
+
 .------------.-----------.
 | Terminal 1 | Server    |
 |            |           |
@@ -15,13 +19,13 @@
 '------------'-----------'
 ```
 
-The server echoes all data.
+The server, which echoes all data.
 
-The relay only displays what looks like a log entry.
+The relay, which only displays what looks like a log entry.
 
 Multiple commands are run in Terminal 1 to send data to the serer.
 
-*cat* is used in terminal 2, giving use a "cheap" terminal.
+*cat* is used in terminal 2, giving use a "cheap" terminal, also check the utilities if you have rlwrap installed.
 
 - terminal 1: sends text to server, server echoes it, relay does nothing (twice)
 - terminal 2: sends text to server, server echoes it, relay does nothing
@@ -148,10 +152,6 @@ terminal 2 $> cat | rd -c my_id
 ```
 
 ## Networked
-
-### Security
-
-With rd on a port you may open a security hole!
 
 ### Local port
 
@@ -284,23 +284,16 @@ Without a formatter the data is echoed.
 Formatters also get the stored key/value in their environment.
 
 *rd* variables of interest:
-- $rd_pid, the pid of the server
 - $rd_counter, number of received lines
 - $rd_line, the last received data
+- $rd_fs, this sessions cache
 
 Things you can do:
 
 - render specific variables in a table 
 - parse variable for content and location to display `echo "key:/x,y/value"`
-- list variables newest set first
 - show data structures
 ...
-
-## SECURITY
-
-With rd on a port and a formatters you may open a security hole!
-
-See *Relays* below for a read only solution
 
 ## Templating
 
@@ -328,7 +321,7 @@ Content-Type: text/html; charset=utf-8
 	<body>
 		<pre>
 +---+---------+
-| k |  value  |
+| k | v       |
 +---+---------+
 | x |$name1 |
 | y |$name2 |
@@ -341,7 +334,7 @@ EOP
 
 # DATA STRUCTURES
 
-Say you have a JSON data structure with embedded new line, you want to see formatted by *jq*.
+Say you have a JSON data structure with embedded new line, you want to see it formatted by *jq*.
 
 First you'll need a specialized formatter that takes a variable and pass it to *jq*. 
 
@@ -354,7 +347,7 @@ On the client side:
 printf 'json=%s\n' "$(<<<"$json" base64 -w 0)"
 ```
 
-On the server side:
+On the formatter side:
 
 ```bash
 <<<"$json" base64 --decode | jq
@@ -372,7 +365,7 @@ echo 'r:log_file:' | rd -c id
 
 # RELAYS
 
-Get a server's output to another terminal, the relay will close when server closes.
+Get a server's output to another terminal, the relay will close when the server closes.
 
 ```bash
 rd -r id
@@ -432,7 +425,7 @@ On server:
 rd -i 1234
 ```
 
-Forward the data send by server on port 1234 via encrypted and authenticated connection
+To forward the data send by server on port 1234 via en encrypted and authenticated connection
 
 Note that we:
 - setup an unidirectional tunnel with -u
@@ -440,12 +433,14 @@ Note that we:
 - accept a single connection and then close
 
 ```bash
+# start a secure relay
 rd -r 1234 | socat -u - ssl-l:1234,reuseaddr,cert=server.pem,cafile=client.crt,verify=1,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3
 ```
 
 On client connect using ssl and output to terminal 
 
 ```bash
+# on the other end of the tunnel
 socat -u ssl:localhost:1234,cert=client.pem,cafile=server.crt,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3 -
 ```
 
@@ -463,21 +458,22 @@ a problem.
 
 If you are not used to open application to internet traffic, or even your intranet, talk to someone knowledgeable or your IT department first.
 
-Offering data as read only via a web service is simple and safe, still anyone with the address sees the data.
+Offering data as read only via a web service is simple and safe, still anyone with the address can see the data.
 
 The same amount of caution must be used when passing data to a formatter, filter the input, use chroot, running in pods, ...
 
-# UTILITIES
+# UTILITIES (don't miss these)
 
 ## rdc
 
-A bash script that's equivalent to "rd -c"
+A bash script that's equivalent to "rd -c", it uses the excellent *rlwrap* readline wrapper which make it easier to use rd as a shell. 
 
 ## trd
 
-* opens *rd* as a server in a tmux pane.
+* opens *rd* as a server in a *tmux* pane.
 
 You can pass the same arguments to *trd* as you can pass to *rd*, without argument *trd* will generated an ID and copy it to the clipboard.
+
 
 # CUSTOM FORMATTERS
 
@@ -491,7 +487,7 @@ You'll need:
 
 ```bash
 declare -A log4j_levels=( ['DEBUG']=0 ['INFO']=1 ['NOTICE']=2 ['WARN']=3 ['ERROR']=4 ['CRIT']=5 ['ALERT']=6 ['EMERG']=7)
-log4j_colors=(            '35'        '2;34'     '2;32'       '33'       '31'        '4;31' '5;31'  '101;93')
+log4j_colors=(            '35'        '2;34'     '2;32'       '33'       '31'        '4;31'     '5;31'      '101;93')
 
 ```
 
@@ -537,6 +533,7 @@ rd -f examples/log4j
 ```
 
 ![LOG4J](https://github.com/nkh/bash-rd/blob/main/media/log4j.png)
+
 Alert is there but the screenshot can't capture blinking text.
 
 # DATABASE
@@ -581,7 +578,7 @@ echo 'sql:select * from my_table;'
 
 The complete example is in *examples/sqlite3*.
 
-## A convenience wrapper
+## A DB convenience wrapper
 
 For a quick debugging session, with few changes, you can use the code found in *examples/db_variables* that let's you write this:
 
@@ -616,9 +613,9 @@ In other words don't put this a loop.
 If you really must run in a loop:
 - use only one db process in your application and use the sqlite3 formatter only when you need it
 
-# TABLE FORMATTED KEY/VALUE
+# TABLE FORMATTED KEY/VALUE[/comment]
 
-A table is a to present variables.
+Use a table to present variables.
 
 The *ptt* formatter uses *Text::Table::Tiny* which can output tables in multiple formats.
 
@@ -629,22 +626,29 @@ You set Key-Values in *rd* and when you need a table you just send a command to 
 rd -i 1234 ptt # use ptt as a formatter
 ```
 
-A *ptt* command look like this:
-
-```
-ptt:variable[ comment];variable; variable[ comment] ....
-```
-
 ```bash
-# set a header
-rd -c 1234 "=:rd_ptt_header=variable content comment"
+# start client
+rd -c 1234 "=:rd_ptt_header=variable content comment" # optional
 
-# set some KV, you can set colored string
+# set 'a' then send a command to ptt with list of variables to display: ptt:variable[ comment];variable; variable[ comment] ...
+rd -c 1234 "=:a=1"
+<<<"ptt:a;b" rd -c 1234 
+
+# set 'TEST' (color coded)
 rd -c 1234 "=:TEST=${RED}test${RESET}"
 
-# send command to ptt with list of variables to display
-<<<"ptt:TEST in red;HOME;not_set" rd -c 1234 
+# you can also send a comment to ptt
+<<<"ptt_comment:display a set of variables from now on" rd -c 1234 
+
+# give ptt a list of variable to display ptt_set:variable[ comment];variable; variable[ comment] ...
+# every time you send something to rd, the table will be displayed
+<<<"ptt_set:TEST;HOME my home" rd -c 1234 
+
+# you can use ptt_reset to clear the variable set
+<<<"ptt_set:TEST;HOME my home" rd -c 1234 
+
 ```
+
 ![PTT](https://github.com/nkh/bash-rd/blob/main/media/rd_ptt.png)
 
 # REAL LIFE EXAMPLES
