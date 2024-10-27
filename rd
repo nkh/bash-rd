@@ -13,6 +13,7 @@ RD_PIPE="$1"
 
 while IFS= read -r rd_line ; do
 	[[ "$rd_line" == q:            ]] && { (( rd_semaphore--, rd_semaphore ))                                      || break ; }
+	[[ "$rd_line" =~ ^v:           ]] && { rd_line="${rd_line:2}" ;                                                           }
 	[[ "$rd_line" == s:            ]] && { ((rd_semaphore++)) ;                                                    continue ; }
 	[[ "$rd_line" == e1:           ]] && { rd_echo=0 ;                                                             continue ; }
 	[[ "$rd_line" == e0:           ]] && { rd_echo=1 ;                                                             continue ; }

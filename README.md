@@ -180,11 +180,12 @@ $> curl localhost:my_port 2>&- | cat
 
 # CONTROL COMMANDS
 
-*rd* accepts some control commands.
+*rd* accepts these control commands.
 
 | Prefix | Action        | Description                                                     |
 | ------ | ------------- | --------------------------------------------------------------- |
 | q:     | quit          | stop the server                                                 |
+| v:     | verbatim      | allows you to send data that looks like a command               |
 | s:     | semaphore     | increment the server semaphore, needs to be 0 to quit           |
 | c:     | clear         | clear server's terminal                                         |
 | e:     | when          | when to run the formatter. 0: always, 1: never, nothing: now    |
