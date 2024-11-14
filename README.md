@@ -188,6 +188,7 @@ $> curl localhost:my_port 2>&- | cat
 | v:     | verbatim      | allows you to send data that looks like a command               |
 | s:     | semaphore     | increment the server semaphore, needs to be 0 to quit           |
 | c:     | clear         | clear server's terminal                                         |
+| t:     | timestamp     | add timestamp to default renderer                               |
 | e:     | when          | when to run the formatter. 0: always, 1: never, nothing: now    |
 | k:     | clean up data | use it if rd complains about existing data                      |
 | f:     | set formatter | dynamically set the formatter                                   |
@@ -726,4 +727,4 @@ There's a niece bash db project here https://blog.dhampir.no/content/bashdb-a-si
     
 # LICENCE
 
-	© Nadim Khemir 2023, Artistic licence 2.0
+	© Nadim Khemir 2024, Artistic licence 2.0

@@ -4,7 +4,7 @@ trap 'rm "$RD_PIPE" 2>&- ; trap SIGINT ; kill -2 $$' SIGHUP SIGINT SIGQUIT SIGPI
 set -a # become a KV store
 
 rd_fs="/tmp/$USER/rd" ; mkdir -p $rd_fs ; rd_config="$HOME/.config/rd"
-RD_ID= ; RD_PIPE= ; rd_pid=$$ ; rd_echo=1 ; rd_semaphore=1 ; rd_counter=0 ; rd_relays=() ; rd_relay_pids=() ; rd_web_page="$rd_fs/web_page_$$" ;
+RD_ID= ; RD_PIPE= ; rd_pid=$$ ; rd_echo=1 ; export rd_timestamp=0 ; rd_semaphore=1 ; rd_counter=0 ; rd_relays=() ; rd_relay_pids=() ; rd_web_page="$rd_fs/web_page_$$" ;
 
 loop()
 {
@@ -19,6 +19,7 @@ while IFS= read -r rd_line ; do
 	[[ "$rd_line" == e0:           ]] && { rd_echo=1 ;                                                             continue ; }
 	[[ "$rd_line" =~ ^r:(.*)\:(.*) ]] && { rd_relays+=(${BASH_REMATCH[1]}) ; rd_relay_pids+=(${BASH_REMATCH[2]}) ; continue ; }
 	[[ "$rd_line" == c:            ]] && { echo -n $'\e[H\e[J' ;                                                   continue ; }
+	[[ "$rd_line" == t:            ]] && { rd_timestamp=1 ;                                                        continue ; }
 	[[ "$rd_line" =~ ^f:           ]] && { formatter "${rd_line:2}" ; rd_line= ;                                              }
 	[[ "$rd_line" == e:            ]] && { rd_do=0 ;                                                                          }
 	[[ "$rd_line" =~ ^=:           ]] && { parse "${rd_line:2}" ; rd_line= ;                                                  } 
@@ -36,7 +37,7 @@ done <$1
 [[ "${rd_relay_pids[@]}" ]] && for p in "${rd_relay_pids[@]}" ; do kill -SIGHUP -$p ; done
 }
 
-rd_echo()   { echo "$rd_line" ; }
+rd_echo()   { ((rd_timestamp)) && printf '%(%m-%d %H:%M:%S)T: ' ; echo "$rd_line" ; }
 formatter() { [[ -f "$1" ]] && rd_format="$1" || { [[ -f "$rd_config/$1" ]] && rd_format="$rd_config/$1"; } || { rd_format=rd_echo ; echo "rd: using default formatter" ; } ; }
 parse()     { IFS=$';' read -ra rd_p <<<"$1" ; for rd_r in "${rd_p[@]}" ; do [[ "$rd_r" =~ ^[_a-zA-Z0-9]+= ]] && eval "${rd_r%%=*}='${rd_r#*=}'" ; done <<<"$1" ; }
 ploop ()    { [[ -e "$2" ]] && { echo "rd: '$1' already exists" >&2 ; exit 1 ; } ; mkfifo $2 ; exec 3<>$2 ; echo "rd: $1" ; loop "$2" "$3" ; rm $2 ; }
